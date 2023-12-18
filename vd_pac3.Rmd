@@ -1,0 +1,323 @@
+---
+title: 'Visualització de dades: PAC3 - Storytelling'
+author: "Autor: Javier Jiménez Gil"
+date: "Decembre 2023"
+output:
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+  word_document: default
+  pdf_document:
+    highlight: zenburn
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Càrrega i processament inicial
+
+```{r message= FALSE, warning=FALSE}
+# Carreguem llibreries necessàries
+if (!require('dplyr')) install.packages('dplyr'); library('dplyr')
+
+# Carreguem les dades - Kaggle files
+# 2022
+kaggleData2022 <- read.csv("kaggle-survey-2022/kaggle_survey_2022_responses.csv", row.names=NULL)
+
+# 2021
+kaggleData2021 <- read.csv("kaggle-survey-2021/kaggle_survey_2021_responses.csv", row.names=NULL)
+
+# 2020
+kaggleData2020 <- read.csv("kaggle-survey-2020/kaggle_survey_2020_responses.csv", row.names=NULL)
+
+# 2019
+kaggleData2019 <- read.csv("kaggle-survey-2019/multiple_choice_responses.csv", row.names=NULL)
+```
+
+# Comptar països per al mapa
+```{r message= FALSE, warning=FALSE}
+countries_table <- table(kaggleData2022$Q4)
+countries_df <- as.data.frame(countries_table)
+countries_df <- countries_df %>% rename(
+  'Country' = 'Var1'
+)
+countries_df
+```
+
+# Comptar gènere de Kaggle per al gràfic de barres
+```{r message= FALSE, warning=FALSE}
+gender_table <- table(kaggleData2022$Q3)
+gender_df <- as.data.frame(gender_table)
+gender_df <- gender_df %>% rename(
+  'Gender' = 'Var1'
+)
+gender_df
+```
+
+# Comptar salaris de Kaggle per al gràfic de barres
+```{r message= FALSE, warning=FALSE}
+kaggleData2022$Q29 <- ifelse(kaggleData2022$Q29=="", "Prefer not to say", 
+                             ifelse(kaggleData2022$Q29=="$0-999", "0-999",
+                                    ifelse(kaggleData2022$Q29=="$500,000-999,999", "500,000-999,999", 
+                                           ifelse(kaggleData2022$Q29==">$1,000,000", ">1,000,000", kaggleData2022$Q29))))
+salary_table <- table(kaggleData2022$Q29)
+salary_df <- as.data.frame(salary_table)
+salary_df <- salary_df %>% rename(
+  'Salary' = 'Var1'
+)
+salary_df
+```
+
+
+
+# Count algorismes de visualització
+
+```{r message= FALSE, warning=FALSE}
+# Count 2022
+library(tibble)
+
+notblanks <- colSums(!is.na(kaggleData2022) & !kaggleData2022=="" & !is.null(kaggleData2022))
+notblanks_df <- as.data.frame(notblanks)
+notblanks_df <- tibble::rownames_to_column(notblanks_df, "Library")
+notblanks_df <- notblanks_df %>% rename(
+  '2022' = 'notblanks'
+)
+visLibraries2022 <- notblanks_df[notblanks_df$Library %in% c("Q15_1","Q15_2","Q15_3","Q15_4","Q15_5","Q15_6","Q15_7","Q15_8","Q15_9","Q15_10","Q15_11","Q15_12","Q15_13","Q15_14","Q15_15"),]
+visLibraries2022[visLibraries2022$Library=="Q15_1", "Library"] <- "Matplotlib"
+visLibraries2022[visLibraries2022$Library=="Q15_2", "Library"] <- "Seaborn"
+visLibraries2022[visLibraries2022$Library=="Q15_3", "Library"] <- "Plotly/Plotly Express"
+visLibraries2022[visLibraries2022$Library=="Q15_4", "Library"] <- "Ggplot/ggplot2"
+visLibraries2022[visLibraries2022$Library=="Q15_5", "Library"] <- "Shiny"
+visLibraries2022[visLibraries2022$Library=="Q15_6", "Library"] <- "D3 js"
+visLibraries2022[visLibraries2022$Library=="Q15_7", "Library"] <- "Altair"
+visLibraries2022[visLibraries2022$Library=="Q15_8", "Library"] <- "Bokeh"
+visLibraries2022[visLibraries2022$Library=="Q15_9", "Library"] <- "Geoplotlib"
+visLibraries2022[visLibraries2022$Library=="Q15_10", "Library"] <- "Leaflet/Folium"
+visLibraries2022[visLibraries2022$Library=="Q15_11", "Library"] <- "Pygal"
+visLibraries2022[visLibraries2022$Library=="Q15_12", "Library"] <- "Dygraphs"
+visLibraries2022[visLibraries2022$Library=="Q15_13", "Library"] <- "Highcharter"
+visLibraries2022[visLibraries2022$Library=="Q15_14", "Library"] <- "None"
+visLibraries2022[visLibraries2022$Library=="Q15_15", "Library"] <- "Other"
+visLibraries2022
+```
+
+```{r message= FALSE, warning=FALSE}
+# Count 2021
+notblanks <- colSums(!is.na(kaggleData2021) & !kaggleData2021=="" & !is.null(kaggleData2021))
+notblanks_df <- as.data.frame(notblanks)
+notblanks_df <- tibble::rownames_to_column(notblanks_df, "Library")
+notblanks_df <- notblanks_df %>% rename(
+  '2021' = 'notblanks'
+)
+visLibraries2021 <- notblanks_df[notblanks_df$Library %in% c("Q14_Part_1","Q14_Part_2","Q14_Part_3","Q14_Part_4","Q14_Part_5","Q14_Part_6","Q14_Part_7","Q14_Part_8","Q14_Part_9","Q14_Part_10","Q14_Part_11","Q14_OTHER"),]
+visLibraries2021[visLibraries2021$Library=="Q14_Part_1", "Library"] <- "Matplotlib"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_2", "Library"] <- "Seaborn"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_3", "Library"] <- "Plotly/Plotly Express"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_4", "Library"] <- "Ggplot/ggplot2"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_5", "Library"] <- "Shiny"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_6", "Library"] <- "D3 js"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_7", "Library"] <- "Altair"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_8", "Library"] <- "Bokeh"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_9", "Library"] <- "Geoplotlib"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_10", "Library"] <- "Leaflet/Folium"
+visLibraries2021[visLibraries2021$Library=="Q14_Part_11", "Library"] <- "None"
+visLibraries2021[visLibraries2021$Library=="Q14_OTHER", "Library"] <- "Other"
+visLibraries2021
+```
+
+```{r message= FALSE, warning=FALSE}
+# Count 2020
+notblanks <- colSums(!is.na(kaggleData2020) & !kaggleData2020=="" & !is.null(kaggleData2020))
+notblanks_df <- as.data.frame(notblanks)
+notblanks_df <- tibble::rownames_to_column(notblanks_df, "Library")
+notblanks_df <- notblanks_df %>% rename(
+  '2020' = 'notblanks'
+)
+visLibraries2020 <- notblanks_df[notblanks_df$Library %in% c("Q14_Part_1","Q14_Part_2","Q14_Part_3","Q14_Part_4","Q14_Part_5","Q14_Part_6","Q14_Part_7","Q14_Part_8","Q14_Part_9","Q14_Part_10","Q14_Part_11","Q14_OTHER"),]
+visLibraries2020[visLibraries2020$Library=="Q14_Part_1", "Library"] <- "Matplotlib"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_2", "Library"] <- "Seaborn"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_3", "Library"] <- "Plotly/Plotly Express"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_4", "Library"] <- "Ggplot/ggplot2"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_5", "Library"] <- "Shiny"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_6", "Library"] <- "D3 js"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_7", "Library"] <- "Altair"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_8", "Library"] <- "Bokeh"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_9", "Library"] <- "Geoplotlib"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_10", "Library"] <- "Leaflet/Folium"
+visLibraries2020[visLibraries2020$Library=="Q14_Part_11", "Library"] <- "None"
+visLibraries2020[visLibraries2020$Library=="Q14_OTHER", "Library"] <- "Other"
+visLibraries2020
+```
+
+
+```{r message= FALSE, warning=FALSE}
+# Count 2019
+notblanks <- colSums(!is.na(kaggleData2019) & !kaggleData2019=="" & !is.null(kaggleData2019))
+notblanks_df <- as.data.frame(notblanks)
+notblanks_df <- tibble::rownames_to_column(notblanks_df, "Library")
+notblanks_df <- notblanks_df %>% rename(
+  '2019' = 'notblanks'
+)
+visLibraries2019 <- notblanks_df[notblanks_df$Library %in% c("Q20_Part_1","Q20_Part_2","Q20_Part_3","Q20_Part_4","Q20_Part_5","Q20_Part_6","Q20_Part_7","Q20_Part_8","Q20_Part_9","Q20_Part_10","Q20_Part_11","Q20_Part_12"),]
+visLibraries2019[visLibraries2019$Library=="Q20_Part_1", "Library"] <- "Ggplot/ggplot2"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_2", "Library"] <- "Matplotlib"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_3", "Library"] <- "Altair"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_4", "Library"] <- "Shiny"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_5", "Library"] <- "D3 js"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_6", "Library"] <- "Plotly/Plotly Express"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_7", "Library"] <- "Bokeh"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_8", "Library"] <- "Seaborn"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_9", "Library"] <- "Geoplotlib"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_10", "Library"] <- "Leaflet/Folium"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_11", "Library"] <- "None"
+visLibraries2019[visLibraries2019$Library=="Q20_Part_12", "Library"] <- "Other"
+visLibraries2019
+```
+
+
+```{r message= FALSE, warning=FALSE}
+# FULL JOIN
+visLibrararies2021_2022 <- merge(x=visLibraries2021, y=visLibraries2022, by="Library", all=TRUE)
+visLibrararies2020_2022 <- merge(x=visLibraries2020, y=visLibrararies2021_2022, by="Library", all=TRUE)
+visLibrararies2019_2022 <- merge(x=visLibraries2019, y=visLibrararies2020_2022, by="Library", all=TRUE)
+visLibrararies2019_2022
+```
+
+
+# Count algorismes de ML
+
+```{r message= FALSE, warning=FALSE}
+# Count 2022
+library(tibble)
+
+notblanksML <- colSums(!is.na(kaggleData2022) & !kaggleData2022=="" & !is.null(kaggleData2022))
+notblanksML_df <- as.data.frame(notblanksML)
+notblanksML_df <- tibble::rownames_to_column(notblanksML_df, "Framework")
+notblanksML_df <- notblanksML_df %>% rename(
+  '2022' = 'notblanksML'
+)
+mlFrameworks2022 <- notblanksML_df[notblanksML_df$Framework %in% c("Q17_1","Q17_2","Q17_3","Q17_4","Q17_5","Q17_6","Q17_7","Q17_8","Q17_9","Q17_10","Q17_11","Q17_12","Q17_13","Q17_14","Q17_15"),]
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_1", "Framework"] <- "Scikit-learn"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_2", "Framework"] <- "TensorFlow"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_3", "Framework"] <- "Keras"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_4", "Framework"] <- "PyTorch"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_5", "Framework"] <- "Fast.ai"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_6", "Framework"] <- "Xgboost"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_7", "Framework"] <- "LightGBM"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_8", "Framework"] <- "CatBoost"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_9", "Framework"] <- "Caret"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_10", "Framework"] <- "Tidymodels"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_11", "Framework"] <- "JAX"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_12", "Framework"] <- "PyTorch Lightning"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_13", "Framework"] <- "Huggingface"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_14", "Framework"] <- "None"
+mlFrameworks2022[mlFrameworks2022$Framework=="Q17_15", "Framework"] <- "Other"
+mlFrameworks2022
+```
+
+```{r message= FALSE, warning=FALSE}
+# Count 2021
+notblanksML <- colSums(!is.na(kaggleData2021) & !kaggleData2021=="" & !is.null(kaggleData2021))
+notblanksML_df <- as.data.frame(notblanksML)
+notblanksML_df <- tibble::rownames_to_column(notblanksML_df, "Framework")
+notblanksML_df <- notblanksML_df %>% rename(
+  '2021' = 'notblanksML'
+)
+mlFrameworks2021 <- notblanksML_df[notblanksML_df$Framework %in% c("Q16_Part_1","Q16_Part_2","Q16_Part_3","Q16_Part_4","Q16_Part_5","Q16_Part_6","Q16_Part_7","Q16_Part_8","Q16_Part_9","Q16_Part_10","Q16_Part_11","Q16_Part_12","Q16_Part_13","Q16_Part_14","Q16_Part_15","Q16_Part_16","Q16_Part_17","Q16_OTHER"),]
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_1", "Framework"] <- "Scikit-learn"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_2", "Framework"] <- "TensorFlow"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_3", "Framework"] <- "Keras"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_4", "Framework"] <- "PyTorch"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_5", "Framework"] <- "Fast.ai"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_6", "Framework"] <- "MXNet"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_7", "Framework"] <- "Xgboost"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_8", "Framework"] <- "LightGBM"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_9", "Framework"] <- "CatBoost"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_10", "Framework"] <- "Prophet"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_11", "Framework"] <- "H2O 3"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_12", "Framework"] <- "Caret"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_13", "Framework"] <- "Tidymodels"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_14", "Framework"] <- "JAX"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_15", "Framework"] <- "PyTorch Lightning"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_16", "Framework"] <- "Huggingface"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_Part_17", "Framework"] <- "None"
+mlFrameworks2021[mlFrameworks2021$Framework=="Q16_OTHER", "Framework"] <- "Other"
+mlFrameworks2021
+```
+
+```{r message= FALSE, warning=FALSE}
+# Count 2020
+notblanksML <- colSums(!is.na(kaggleData2020) & !kaggleData2020=="" & !is.null(kaggleData2020))
+notblanksML_df <- as.data.frame(notblanksML)
+notblanksML_df <- tibble::rownames_to_column(notblanksML_df, "Framework")
+notblanksML_df <- notblanksML_df %>% rename(
+  '2020' = 'notblanksML'
+)
+mlFrameworks2020 <- notblanksML_df[notblanksML_df$Framework %in% c("Q16_Part_1","Q16_Part_2","Q16_Part_3","Q16_Part_4","Q16_Part_5","Q16_Part_6","Q16_Part_7","Q16_Part_8","Q16_Part_9","Q16_Part_10","Q16_Part_11","Q16_Part_12","Q16_Part_13","Q16_Part_14","Q16_Part_15","Q16_OTHER"),]
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_1", "Framework"] <- "Scikit-learn"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_2", "Framework"] <- "TensorFlow"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_3", "Framework"] <- "Keras"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_4", "Framework"] <- "PyTorch"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_5", "Framework"] <- "Fast.ai"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_6", "Framework"] <- "MXNet"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_7", "Framework"] <- "Xgboost"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_8", "Framework"] <- "LightGBM"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_9", "Framework"] <- "CatBoost"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_10", "Framework"] <- "Prophet"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_11", "Framework"] <- "H2O 3"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_12", "Framework"] <- "Caret"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_13", "Framework"] <- "Tidymodels"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_14", "Framework"] <- "JAX"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_Part_15", "Framework"] <- "None"
+mlFrameworks2020[mlFrameworks2020$Framework=="Q16_OTHER", "Framework"] <- "Other"
+mlFrameworks2020
+```
+
+```{r message= FALSE, warning=FALSE}
+# Count 2019
+notblanksML <- colSums(!is.na(kaggleData2019) & !kaggleData2019=="" & !is.null(kaggleData2019))
+notblanksML_df <- as.data.frame(notblanksML)
+notblanksML_df <- tibble::rownames_to_column(notblanksML_df, "Framework")
+notblanksML_df <- notblanksML_df %>% rename(
+  '2019' = 'notblanksML'
+)
+mlFrameworks2019 <- notblanksML_df[notblanksML_df$Framework %in% c("Q28_Part_1","Q28_Part_2","Q28_Part_3","Q28_Part_4","Q28_Part_5","Q28_Part_6","Q28_Part_7","Q28_Part_8","Q28_Part_9","Q28_Part_10","Q28_Part_11","Q28_Part_12"),]
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_1", "Framework"] <- "Scikit-learn"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_2", "Framework"] <- "TensorFlow"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_3", "Framework"] <- "Keras"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_4", "Framework"] <- "RandomForest"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_5", "Framework"] <- "Xgboost"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_6", "Framework"] <- "PyTorch"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_7", "Framework"] <- "Caret"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_8", "Framework"] <- "LightGBM"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_9", "Framework"] <- "Spark MLib"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_10", "Framework"] <- "Fast.ai"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_11", "Framework"] <- "None"
+mlFrameworks2019[mlFrameworks2019$Framework=="Q28_Part_12", "Framework"] <- "Other"
+mlFrameworks2019
+```
+
+```{r message= FALSE, warning=FALSE}
+# FULL JOIN
+mlFrameworks2021_2022 <- merge(x=mlFrameworks2021, y=mlFrameworks2022, by="Framework", all=TRUE)
+mlFrameworks2020_2022 <- merge(x=mlFrameworks2020, y=mlFrameworks2021_2022, by="Framework", all=TRUE)
+mlFrameworks2019_2022 <- merge(x=mlFrameworks2019, y=mlFrameworks2020_2022, by="Framework", all=TRUE)
+mlFrameworks2019_2022
+```
+
+
+# Exportació
+
+```{r message= FALSE, warning=FALSE}
+write.csv(countries_df, "Data R/kaggle2022_countries.csv", row.names=FALSE, na="")
+write.csv(visLibrararies2019_2022, "Data R/historic_vizlibraries.csv", row.names=FALSE, na="")
+write.csv(mlFrameworks2019_2022, "Data R/historic_mlFrameworks.csv", row.names=FALSE, na="")
+write.csv(gender_df, "Data R/kaggle2022_gender.csv", row.names=FALSE, na="")
+write.csv(salary_df, "Data R/kaggle2022_salary.csv", row.names=FALSE, na="")
+```
